@@ -2,14 +2,17 @@
 # SALES ANALYSIS ----
 
 # 1.0 Load libraries ----
-
-
+library(tidyverse)
+library(readxl)
 # 2.0 Importing Files ----
-
-
+bikes_tbl <- read_excel("ds_data/01_bike_sales/01_raw_data/bikes.xlsx")
+orderlines_tbl <- read_excel("ds_data/01_bike_sales/01_raw_data/orderlines.xlsx")
+bikeshops_tbl <- read_excel("ds_data/01_bike_sales/01_raw_data/bikeshops.xlsx")
 # 3.0 Examining Data ----
+bikes_tbl
+orderlines_tbl
 
-
+glimpse(bikes_tbl)
 # 4.0 Joining Data ----
 
 
