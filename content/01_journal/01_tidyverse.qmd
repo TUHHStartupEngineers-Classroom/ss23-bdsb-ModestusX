@@ -5,134 +5,134 @@ author: "Moritz Henkel"
 # SALES ANALYSIS Working Frame----
 
 ## Load libraries ----
-
+First of all we need to import the libraries.
+```
+library(tidyverse)
+library(readxl)
+```
 
 ## Importing Files ----
-
+Then we need to import the files.
+```
+bikes_tbl <- read_excel("ds_data/01_bike_sales/01_raw_data/bikes.xlsx")
+orderlines_tbl <- read_excel("ds_data/01_bike_sales/01_raw_data/orderlines.xlsx")
+bikeshops_tbl <- read_excel("ds_data/01_bike_sales/01_raw_data/bikeshops.xlsx")
+```
 
 ## Examining Data ----
-
-
+Subsequently, we check if everything worked well.
+```
+glimpse(bikeshops_tbl)
+glimpse(orderlines_tbl)
+glimpse(bikes_tbl
+```
 ## Joining Data ----
-
-
+Then we need to join the data. Here, we are gonna use the leftjoin and allign the data with the relevant columns of the respective tibbles. Lastly, we are gonna have a quick look into the new data table.
+```
+bike_orderlines_joined_tbl <- orderlines_tbl %>%
+  left_join(bikes_tbl, by = c("product.id" = "bike.id")) %>%
+  left_join(bikeshops_tbl, by = c("customer.id" = "bikeshop.id"))
+glimpse(bike_orderlines_joined_tbl)
+```
 ## Wrangling Data ----
+Separate the column category into the corresponding categories.Create a new column for the total price and remove all the unnecessary data. Moreover, we need to select the relevant columns.
+```
+bike_orderlines_wrangled_tbl <- bike_orderlines_joined_tbl %>%
+  separate(col    = location,
+           into   = c("city", "state"),
+           sep    = ",") %>%
 
+  mutate(total.price = price * quantity) %>%
+  
+  select(-...1, -gender,-url,-lat,-lng,-name,-frame.material,-weight,-category,-model,-model.year) %>%
+  
+  select(order.id, contains("order"), city, state,
+         price, quantity, total.price,
+         everything()) %>%
+  
+  set_names(names(.) %>% str_replace_all("\\.", "_"))
+```
+# Business Insights ----
+### Sales by Location ----
+## Step 1 - Manipulate
+Here we need to manipulate the data first. Especially grouping by state and summing up the total amount of sales in order to be able to plot it later on.
+```
+sales_by_location_tbl <- bike_orderlines_wrangled_tbl %>%
+select(total_price, state) %>%
+group_by(state) %>%
+summarise(sales = sum(total_price)) %>%
+ungroup() %>%
+mutate(sales_text = scales::dollar(sales, big.mark = ".", 
+                                     decimal.mark = ",", 
+                                     prefix = "", 
+                                     suffix = " €"))
 
-## Business Insights ----
-### Sales by Year ----
+sales_by_location_tbl
+```
+## Step 2 - Visualize
+In this last step, we are able to plot our sales-results. We pipe our sales data into the ggplot funtcion and use the geom_col function in order to get the desired bars. By adding labels, we are able to highlight our results even more.
+```
+sales_by_location_tbl %>%
+  
+ggplot(aes(x = state, y = sales)) +
+geom_col(fill = "#2DC6D6") +
+geom_label(aes(label = sales_text)) +
+scale_y_continuous(labels = scales::dollar_format(big.mark = ".", 
+                                                    decimal.mark = ",", 
+                                                    prefix = "", 
+                                                    suffix = " €")) +
+theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+labs(
+    title    = "Revenue by Location",
+    subtitle = "Highest Revenue in NRW",
+    x = "", # Override defaults for x and y
+    y = "Revenue"
+  )
+```
+The results are shown in the figure below.
+![Caption](../../assets/img/tidyverse1.png)
 
-# Step 1 - Manipulate
-
-# Step 2 - Visualize
-
-
-# 6.2 Sales by Year and Category 2 ----
-
-# Step 1 - Manipulate
-
-# Step 2 - Visualize
-
-
-
-# 7.0 Writing Files ----
-
-# 7.1 Excel ----
-
-# 7.2 CSV ----
-
-# 7.3 RDS ----
-
-::: callout-note
-Format guidelines below!
-:::
-
-This is a `.qmd` file. It is plain text with special features. Any time you write just like this, it will be compiled to normal text in the website. If you put a \# in front of your text, it will create a top level-header.
-
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
-
-# Text Formatting
-
-*italics* and **bold**
-
-superscript^2^ / subscript~2~
-
-~~strikethrough~~
-
-`verbatim code`
-
-> Blockquote
-
-# Headings
-
-## Header 2
-### Header 3
-#### Header 4
-##### Header 5
-###### Header 6
-
-# Links & Images
-
-<https://quarto.org>
-
-[Quarto](https://quarto.org)
-
-![Caption](../../assets/img/elephant.png)
-
-[![Caption](../../assets/img/elephant.png)](https://quarto.org)
-
-[![Caption](../../assets/img/elephant.png)](https://quarto.org "An elephant")
-
-
-# Lists
-
-* unordered list
-    + sub-item 1
-    + sub-item 2
-        - sub-sub-item 1
-        
-*   item 2
-
-    Continued (indent 4 spaces)
-    
-    
-1. ordered list
-2. item 2
-    i) sub-item 1
-         A.  sub-sub-item 1
-         
-(@)  A list whose numbering
-
-continues after
-
-(@)  an interruption
-
-# Tables
-
-| Right | Left | Default | Center |
-|------:|:-----|---------|:------:|
-|   12  |  12  |    12   |    12  |
-|  123  |  123 |   123   |   123  |
-|    1  |    1 |     1   |     1  |
-
-# Source Code
-
-Use ``` to delimit blocks of source code:
+### Sales by Location and year (facet_wrap) ----
+## Step 1 - Manipulate
+In order to get the sales corresponding to the location and year, we need to group our data by year and state. And also do the regular editing of the code.
 
 ```
-code
-```
+sales_by_year_by_location_tbl <- bike_orderlines_wrangled_tbl %>%
+select(order_date, total_price, state) %>%
+mutate(year = year(order_date)) %>%
+  
+group_by(year, state) %>%
+summarise(sales=sum(total_price)) %>%
+ungroup() %>%
 
-Add a language to syntax highlight code blocks:
+mutate(sales_text = scales::dollar(sales, big.mark = ".", 
+                                     decimal.mark = ",", 
+                                     prefix = "", 
+                                     suffix = " €"))
 
-```{r}
-1 + 1
+sales_by_year_by_location_tbl
 ```
+## Step 2 - Visualize
+Now once again we can visualize our data. In order to tease the sales for each state, we need to use the face wrap function in this case.
+```
+sales_by_year_by_location_tbl %>%
 
-```{r}
-cars
-```
+ggplot(aes(x =year, y = sales, fill = state)) +
+  
+geom_col() +
+geom_smooth(method = "lm", se = FALSE) +
+  
+facet_wrap(~ state) +
 
-```{r}
-plot(cars)
+  scale_y_continuous(labels = scales::dollar_format(big.mark = ".", 
+                                                    decimal.mark = ",", 
+                                                    prefix = "", 
+                                                    suffix = " €")) +
+  labs(
+    title = "Revenue by state and year",
+    subtitle = "NRW has the steepest trend curve, but Hamburg has the most continuous growth",
+    fill = "Main category" # Changes the legend name
+  ) 
 ```
+The result is shown below.
+![Caption](../../assets/img/tidyverse2.jpeg)
