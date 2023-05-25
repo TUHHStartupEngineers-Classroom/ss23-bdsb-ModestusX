@@ -2,11 +2,11 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.2.269">
+<meta name="generator" content="quarto-1.2.335">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Joschka Schwarz">
+<meta name="author" content="Moritz Henkel">
 
 <title>MyLabJournal - Data Acquisition</title>
 <style>
@@ -43,6 +43,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
 <link href="../../site_libs/bootstrap/bootstrap-dark.min.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -131,7 +134,28 @@ ul.task-list li input[type="checkbox"] {
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Contents</h2>
+   
+  <ul class="collapse">
+  <li><a href="#api-working-frame" id="toc-api-working-frame" class="nav-link active" data-scroll-target="#api-working-frame"><span class="toc-section-number">1</span>  API Working Frame</a>
+  <ul class="collapse">
+  <li><a href="#load-libraries" id="toc-load-libraries" class="nav-link" data-scroll-target="#load-libraries"><span class="toc-section-number">1.1</span>  Load libraries</a></li>
+  <li><a href="#build-urls" id="toc-build-urls" class="nav-link" data-scroll-target="#build-urls"><span class="toc-section-number">1.2</span>  Build URLs</a></li>
+  <li><a href="#call-urls" id="toc-call-urls" class="nav-link" data-scroll-target="#call-urls"><span class="toc-section-number">1.3</span>  Call URLs</a></li>
+  <li><a href="#create-dataframes" id="toc-create-dataframes" class="nav-link" data-scroll-target="#create-dataframes"><span class="toc-section-number">1.4</span>  Create Dataframes</a></li>
+  <li><a href="#plot" id="toc-plot" class="nav-link" data-scroll-target="#plot"><span class="toc-section-number">1.5</span>  Plot</a></li>
+  </ul></li>
+  <li><a href="#webscraping" id="toc-webscraping" class="nav-link" data-scroll-target="#webscraping"><span class="toc-section-number">2</span>  Webscraping</a>
+  <ul class="collapse">
+  <li><a href="#collect-product-families-of-rose" id="toc-collect-product-families-of-rose" class="nav-link" data-scroll-target="#collect-product-families-of-rose"><span class="toc-section-number">2.1</span>  Collect Product Families of ROSE</a></li>
+  <li><a href="#create-product-family-urls-of-rose" id="toc-create-product-family-urls-of-rose" class="nav-link" data-scroll-target="#create-product-family-urls-of-rose"><span class="toc-section-number">2.2</span>  Create product family URLs of Rose</a></li>
+  <li><a href="#collect-product-categories-of-rose" id="toc-collect-product-categories-of-rose" class="nav-link" data-scroll-target="#collect-product-categories-of-rose"><span class="toc-section-number">2.3</span>  Collect Product categories of ROSE</a></li>
+  <li><a href="#collect-bike-data-for-a-single-bike" id="toc-collect-bike-data-for-a-single-bike" class="nav-link" data-scroll-target="#collect-bike-data-for-a-single-bike"><span class="toc-section-number">2.4</span>  Collect Bike Data for a single bike</a></li>
+  <li><a href="#wrap-it-into-a-function" id="toc-wrap-it-into-a-function" class="nav-link" data-scroll-target="#wrap-it-into-a-function"><span class="toc-section-number">2.5</span>  Wrap it into a function</a></li>
+  </ul></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -148,7 +172,7 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Author</div>
     <div class="quarto-title-meta-contents">
-             <p>Joschka Schwarz </p>
+             <p>Moritz Henkel </p>
           </div>
   </div>
     
@@ -159,21 +183,265 @@ ul.task-list li input[type="checkbox"] {
 
 </header>
 
-<div class="callout-note callout callout-style-default callout-captioned">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-caption-container flex-fill">
-Note
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>You can delete everything in here and start fresh.</p>
-</div>
-</div>
+<section id="api-working-frame" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> API Working Frame</h1>
+<section id="load-libraries" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="load-libraries"><span class="header-section-number">1.1</span> Load libraries</h2>
+<pre><code>library(httr)
+library(jsonlite)
+library(tidyverse)
+library(lubridate)
+library(ggplot2)</code></pre>
+</section>
+<section id="build-urls" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="build-urls"><span class="header-section-number">1.2</span> Build URLs</h2>
+<p>In this case I decided to go for some Macroeconimic Data. Consumer Price Index and the Producer Price Index. The URLs were build with the help of a base URL and then glued.</p>
+<pre><code>base_url &lt;- "https://www.econdb.com/api/series/"
+cpi_url &lt;- "CPIUS"
+ppi_url &lt;- "PPIUS"
+
+full_url_cpi &lt;- base::paste0(base_url,cpi_url)
+full_url_ppi &lt;- base::paste0(base_url,ppi_url)</code></pre>
+</section>
+<section id="call-urls" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="call-urls"><span class="header-section-number">1.3</span> Call URLs</h2>
+<p>Using and specifying the httr library we call our APIs</p>
+<pre><code>api_call_cpi &lt;- httr::GET(full_url_cpi)
+api_call_ppi &lt;- httr::GET(full_url_ppi)</code></pre>
+</section>
+<section id="create-dataframes" class="level2" data-number="1.4">
+<h2 data-number="1.4" class="anchored" data-anchor-id="create-dataframes"><span class="header-section-number">1.4</span> Create Dataframes</h2>
+<p>In the Next step we need to create our dataframes. Here we Use the rawtochar first and then the JSON package and lastly the mapdfr function. Finally we erade unnecessary columns and clean our data.</p>
+<pre><code>api_cpi_char &lt;- base::rawToChar(api_call_cpi$content)
+api_ppi_char &lt;- base::rawToChar(api_call_ppi$content)
+
+api_cpi_JSON &lt;- jsonlite::fromJSON(api_cpi_char, flatten = TRUE)
+api_ppi_JSON &lt;- jsonlite::fromJSON(api_ppi_char, flatten = TRUE)
+
+api_cpi_tbl &lt;- api_cpi_JSON %&gt;%
+  map_dfr( ~ .x %&gt;% as_tibble()) %&gt;%
+  select(.,-c(value,status,"1:area_code","3:item_code","1220:base_code","GEO:None"))
+api_ppi_tbl &lt;- api_ppi_JSON %&gt;%
+  map_dfr( ~ .x %&gt;% as_tibble())
 
 
+api_cpi_cleaned_tbl &lt;- api_cpi_tbl[-(1:6),] %&gt;% mutate(Date= as.Date(dates))
+api_ppi_cleaned_tbl &lt;- api_ppi_tbl[-(1:6),] %&gt;% mutate(Date= as.Date(dates))</code></pre>
+</section>
+<section id="plot" class="level2" data-number="1.5">
+<h2 data-number="1.5" class="anchored" data-anchor-id="plot"><span class="header-section-number">1.5</span> Plot</h2>
+<p>In the Last step we can plot our data. Since we want a continous line showing the rise in the respective index, we use the geom_line. CPI First:</p>
+<pre><code>  ggplot(api_cpi_cleaned_tbl, aes(x = Date, y = values, color = "darkred",lty = 'Consumer Price Index')) + 
+   geom_line() + 
+  scale_x_date(date_labels = "%Y-%m")</code></pre>
+<p>With the corresping result: <a href="../../assets/img/cpi.png" class="lightbox" title="Caption" data-gallery="quarto-lightbox-gallery-1"><img src="../../assets/img/cpi.png" class="img-fluid" alt="Caption"></a> And then also PPI:</p>
+<pre><code> ggplot(api_ppi_cleaned_tbl, aes(x = Date, y = values, color="steelblue",lty = 'Produer Price Index')) + 
+    geom_line() + 
+    scale_x_date(date_labels = "%Y-%m")</code></pre>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="../../assets/img/ppi.png" class="lightbox" title="Caption" data-gallery="quarto-lightbox-gallery-2"><img src="../../assets/img/ppi.png" class="img-fluid figure-img"></a></p>
+<p></p><figcaption class="figure-caption">Caption</figcaption><p></p>
+</figure>
+</div>
+</section>
+</section>
+<section id="webscraping" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Webscraping</h1>
+<p>This was really a lot of code, due to some really deeply nested html tags with the rosebike hompage. ## Libraries</p>
+<pre><code></code></pre>
+<pre><code>library(tidyverse) 
+library(rvest)     
+library(xope)
+library(jsonlite)
+library(glue) 
+library(stringi)</code></pre>
+<section id="collect-product-families-of-rose" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="collect-product-families-of-rose"><span class="header-section-number">2.1</span> Collect Product Families of ROSE</h2>
+<p>Add the url.</p>
+<pre><code>url_home &lt;- "https://www.rosebikes.de/fahrräder"</code></pre>
+<p>Read in the HTML for the entire homepage</p>
+<pre><code>html_home &lt;- read_html(url_home)</code></pre>
+<p>Webscrape the product families from ROSE bikes.</p>
+<pre><code>bike_family_tbl &lt;- html_home %&gt;%</code></pre>
+<p>parent node</p>
+<pre><code>html_nodes(".columns") %&gt;%</code></pre>
+<p>Get the nodes for the families</p>
+<pre><code>html_nodes(css = ".catalog-navigation__list-item &gt; a") %&gt;%</code></pre>
+<p>And extract the information of the title attribute</p>
+<pre><code>html_attr('title') %&gt;%</code></pre>
+<p>Remove the product families Sale, bikefinder und schnell verfügbare Bikes</p>
+<pre><code>discard(.p = ~stringr::str_detect(.x,"Sale|Bike Finder|Schnell verfügbare Bikes"))%&gt;%</code></pre>
+<p>Convert vector to tibble</p>
+<pre><code>enframe(name = "position", value ="family_class") %&gt;%
+  
+  mutate(
+    family_id = str_glue("#{family_class}")
+  )
+
+bike_family_tbl</code></pre>
+</section>
+<section id="create-product-family-urls-of-rose" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="create-product-family-urls-of-rose"><span class="header-section-number">2.2</span> Create product family URLs of Rose</h2>
+<p>Create bike family url tbl to point at the right nodes</p>
+<pre><code>bike_family_url_tbl &lt;- html_home %&gt;%</code></pre>
+<p>Parent node</p>
+<pre><code>html_nodes(".columns") %&gt;%</code></pre>
+<p>Get the nodes for the families once again</p>
+<pre><code>html_nodes(css = ".catalog-navigation__list-item &gt; a") %&gt;%</code></pre>
+<p>And extract the information of the href attribute for bike urls</p>
+<pre><code>html_attr('href') %&gt;%</code></pre>
+<p>Remove the product families sale, bikefinder und bikes mit kurzer lieferzeit-rennrad</p>
+<pre><code>discard(.p = ~stringr::str_detect(.x,"/fahrräder/sale|/bike-finder|/bikes-mit-kurzer-lieferzeit-rennrad"))%&gt;%</code></pre>
+<p>Convert vector to tibble</p>
+<pre><code>enframe(name = "position", value ="subdirectory") %&gt;%
+  
+  mutate(
+    url = glue("https://www.rosebikes.de{subdirectory}")
+  ) %&gt;%
+  </code></pre>
+<p>Some categories are listed multiple times. We only need unique values</p>
+<pre><code>  distinct(url)
+
+bike_family_url_tbl</code></pre>
+</section>
+<section id="collect-product-categories-of-rose" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="collect-product-categories-of-rose"><span class="header-section-number">2.3</span> Collect Product categories of ROSE</h2>
+<p>HTML Tags are deeply neste + JAVA, thus individual bike category data gathering Also many product Families had no further product categories.</p>
+<p>Create URLs for the product categories.</p>
+<pre><code>url_mtb &lt;- "https://www.rosebikes.de//fahrräder/mtb"
+url_rennrad &lt;- "https://www.rosebikes.de/fahrräder/rennrad"
+url_ebike &lt;- "https://www.rosebikes.de/fahrräder/e-bike"</code></pre>
+<p>Finally be able to sort of avoid the deeply nested HTML tags and thus gather the data. Create tibbles for that.</p>
+<pre><code>bike_category_mtb_tbl &lt;-  read_html(url_mtb) %&gt;%
+  html_nodes(css = ".catalog-navigation__list-item &gt; a") %&gt;%
+  html_attr('href') %&gt;%
+  discard(.p = ~stringr::str_detect(.x,"/fahrräder/mtb$"))%&gt;%
+  enframe(name = "position", value ="subdirectory") %&gt;% 
+  mutate(url = glue("https://www.rosebikes.de{subdirectory}")) %&gt;%
+  distinct(url)
+
+bike_category_rennrad_tbl &lt;-  read_html(url_rennrad) %&gt;%
+  html_nodes(css = ".catalog-navigation__list-item &gt; a") %&gt;%
+  html_attr('href') %&gt;%
+  discard(.p = ~stringr::str_detect(.x,"/fahrräder/rennrad$"))%&gt;%
+  enframe(name = "position", value ="subdirectory") %&gt;% 
+  mutate(url = glue("https://www.rosebikes.de{subdirectory}")) %&gt;%
+  distinct(url)
+
+bike_category_ebike_tbl &lt;-  read_html(url_ebike) %&gt;%
+  html_nodes(css = ".catalog-navigation__list-item &gt; a") %&gt;%
+  html_attr('href') %&gt;%
+  discard(.p = ~stringr::str_detect(.x,"/fahrräder/e-bike$"))%&gt;%
+  enframe(name = "position", value ="subdirectory") %&gt;% 
+  mutate(url = glue("https://www.rosebikes.de{subdirectory}")) %&gt;%
+  distinct(url)</code></pre>
+<p>In theory you would need another “rest” tibble from all the product families not having product categories, but since this might interfere with the rest of my code due to the different nature of the path, I will not include the rest in the bike category tibble</p>
+<pre><code>bike_category_rest_tbl &lt;- bike_family_url_tbl %&gt;%
+  filter(!row_number() %in% c(1, 2, 4))
+
+bike_category_tbl &lt;- rbind(bike_category_mtb_tbl,bike_category_rennrad_tbl,bike_category_ebike_tbl)</code></pre>
+</section>
+<section id="collect-bike-data-for-a-single-bike" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="collect-bike-data-for-a-single-bike"><span class="header-section-number">2.4</span> Collect Bike Data for a single bike</h2>
+<p>Select first bike for the first category mtb url</p>
+<pre><code>bike_category_url &lt;- bike_category_tbl$url[1]</code></pre>
+<p>Get the URLs for the first bike of the first category</p>
+<pre><code>html_bike_category  &lt;- read_html(bike_category_url)
+bike_url_tbl        &lt;- html_bike_category %&gt;%
+  html_nodes(css = ".align-middle &gt; a") %&gt;%
+  html_attr('href') %&gt;%
+  enframe(name = "position", value = "url")</code></pre>
+<p>Get the description for the first bike of the first category</p>
+<pre><code>bike_desc_tbl &lt;- html_bike_category %&gt;%
+  
+    html_nodes(".catalog-category-bikes__list-item") %&gt;%
+    html_nodes(".catalog-category-bikes__content-subtitle") %&gt;%
+    html_text() %&gt;%
+    enframe(name = "position", value = "description")</code></pre>
+<p>Stack all lists together</p>
+<pre><code>bike_price_tbl &lt;- html_bike_category %&gt;%
+  html_nodes (css =".catalog-category-bikes__price-title") %&gt;%
+  html_text() %&gt;%
+  enframe(name = "position", value = "price")
+
+bike_name_tbl &lt;- html_bike_category %&gt;%
+  html_nodes (css = ".basic-headline__title") %&gt;%
+  html_text() %&gt;%
+  discard(.p = ~stringr::str_detect(.x,"Cross Country|Beratung"))%&gt;%
+  enframe(name ="position", value ="name")
+
+single_bike_data_tbl &lt;-  bike_name_tbl %&gt;%
+  left_join(bike_price_tbl) %&gt;%
+  left_join(bike_desc_tbl) %&gt;%
+  left_join(bike_url_tbl)</code></pre>
+</section>
+<section id="wrap-it-into-a-function" class="level2" data-number="2.5">
+<h2 data-number="2.5" class="anchored" data-anchor-id="wrap-it-into-a-function"><span class="header-section-number">2.5</span> Wrap it into a function</h2>
+<p>Put every single piece into a function</p>
+<pre><code>get_bike_data &lt;- function(url) {
+  html_bike_category &lt;- read_html(url)
+  
+  #Get the URLs
+  html_bike_category  &lt;- read_html(bike_category_url)
+  bike_url_tbl        &lt;- html_bike_category %&gt;%
+    html_nodes(css = ".align-middle &gt; a") %&gt;%
+    html_attr('href') %&gt;%
+    enframe(name = "position", value = "url")
+  
+  #Get the descrition
+  bike_desc_tbl &lt;- html_bike_category %&gt;%
+    
+    html_nodes(".catalog-category-bikes__list-item") %&gt;%
+    html_nodes(".catalog-category-bikes__content-subtitle") %&gt;%
+    html_text() %&gt;%
+    enframe(name = "position", value = "description")
+  
+  #Get the price
+  bike_price_tbl &lt;- html_bike_category %&gt;%
+    html_nodes (css =".catalog-category-bikes__price-title") %&gt;%
+    html_text() %&gt;%
+    enframe(name = "position", value = "price")
+  
+  #Get the name
+  bike_name_tbl &lt;- html_bike_category %&gt;%
+    html_nodes (css = ".basic-headline__title") %&gt;%
+    html_text() %&gt;%
+    discard(.p = ~stringr::str_detect(.x,"Cross Country|Beratung"))%&gt;%
+    enframe(name ="position", value ="name")
+  
+  #Stick everything together
+  single_bike_data_tbl &lt;-  bike_name_tbl %&gt;%
+    left_join(bike_price_tbl) %&gt;%
+    left_join(bike_desc_tbl) %&gt;%
+    left_join(bike_url_tbl)
+}</code></pre>
+<p>Run for all bike category urls, so we get the data for every bike</p>
+<pre><code>bike_data_tbl &lt;- tibble()
+
+# Loop through all urls
+for (i in seq_along(bike_category_tbl$url)) {
+  
+  bike_category_url &lt;- bike_category_tbl$url[i]
+  bike_data_tbl     &lt;- bind_rows(bike_data_tbl, get_bike_data(bike_category_url))
+  
+  # Wait between each request to reduce the load on the server 
+  # Otherwise we could get blocked
+  Sys.sleep(5)
+  
+  # print the progress
+  print(i)
+  
+}</code></pre>
+<p>Clean the data so we can have a look into the tibble.</p>
+<pre><code>bike_data_cleaned_tbl &lt;- bike_data_tbl %&gt;%
+  na.omit() %&gt;%
+  select(.,-position)</code></pre>
+<p>The result is shown below. <a href="../../assets/img/acqui.jpeg" class="lightbox" title="Bike names and according prices as well as the description for it" data-gallery="quarto-lightbox-gallery-3"><img src="../../assets/img/acqui.jpeg" class="img-fluid" alt="Bike names and according prices as well as the description for it"></a></p>
+
+
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -425,6 +693,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 });
 </script>
 </div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"openEffect":"zoom","descPosition":"bottom","selector":".lightbox","closeEffect":"zoom","loop":true});</script>
 
 
 

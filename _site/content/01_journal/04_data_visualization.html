@@ -2,11 +2,11 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.2.269">
+<meta name="generator" content="quarto-1.2.335">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Joschka Schwarz">
+<meta name="author" content="Moritz Henkel">
 
 <title>MyLabJournal - Data Visualization</title>
 <style>
@@ -43,6 +43,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
 <link href="../../site_libs/bootstrap/bootstrap-dark.min.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -131,7 +134,24 @@ ul.task-list li input[type="checkbox"] {
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Contents</h2>
+   
+  <ul class="collapse">
+  <li><a href="#first-question" id="toc-first-question" class="nav-link active" data-scroll-target="#first-question"><span class="toc-section-number">1</span>  First Question</a>
+  <ul class="collapse">
+  <li><a href="#libraries" id="toc-libraries" class="nav-link" data-scroll-target="#libraries"><span class="toc-section-number">1.1</span>  Libraries</a></li>
+  <li><a href="#read-the-covid-19-data" id="toc-read-the-covid-19-data" class="nav-link" data-scroll-target="#read-the-covid-19-data"><span class="toc-section-number">1.2</span>  Read the Covid 19 data</a></li>
+  <li><a href="#data-manipulation" id="toc-data-manipulation" class="nav-link" data-scroll-target="#data-manipulation"><span class="toc-section-number">1.3</span>  Data Manipulation</a></li>
+  </ul></li>
+  <li><a href="#second-question" id="toc-second-question" class="nav-link" data-scroll-target="#second-question"><span class="toc-section-number">2</span>  Second Question</a>
+  <ul class="collapse">
+  <li><a href="#libraries-1" id="toc-libraries-1" class="nav-link" data-scroll-target="#libraries-1"><span class="toc-section-number">2.1</span>  Libraries</a></li>
+  <li><a href="#read-the-codid19-data" id="toc-read-the-codid19-data" class="nav-link" data-scroll-target="#read-the-codid19-data"><span class="toc-section-number">2.2</span>  Read the Codid19 Data</a></li>
+  <li><a href="#data-manipulation-1" id="toc-data-manipulation-1" class="nav-link" data-scroll-target="#data-manipulation-1"><span class="toc-section-number">2.3</span>  Data Manipulation</a></li>
+  </ul></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -148,7 +168,7 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Author</div>
     <div class="quarto-title-meta-contents">
-             <p>Joschka Schwarz </p>
+             <p>Moritz Henkel </p>
           </div>
   </div>
     
@@ -159,21 +179,128 @@ ul.task-list li input[type="checkbox"] {
 
 </header>
 
-<div class="callout-note callout callout-style-default callout-captioned">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-caption-container flex-fill">
-Note
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>You can delete everything in here and start fresh.</p>
-</div>
-</div>
+<section id="first-question" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> First Question</h1>
+<section id="libraries" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="libraries"><span class="header-section-number">1.1</span> Libraries</h2>
+<pre><code>library(tidyverse)
+library(vroom)
+library(data.table)
+library(tictoc)</code></pre>
+</section>
+<section id="read-the-covid-19-data" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="read-the-covid-19-data"><span class="header-section-number">1.2</span> Read the Covid 19 data</h2>
+<pre><code>covid_data_tbl &lt;- read_csv("https://covid.ourworldindata.org/data/owid-covid-data.csv")</code></pre>
+</section>
+<section id="data-manipulation" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="data-manipulation"><span class="header-section-number">1.3</span> Data Manipulation</h2>
+<p>Select desired countries for the plot.</p>
+<pre><code>selected_countries &lt;- c("Germany", "United Kingdom", "France", "Spain", "United States")</code></pre>
+<p>Create Plot tibble. Select necessary columns. Separate the date column and also create numeriv values for it, so it can be plotted. Also remove empty rows and unite the date again.</p>
+<pre><code>covid_plot_tbl &lt;- covid_data_tbl %&gt;% 
+  select(continent,total_cases,date,location) %&gt;% 
+  relocate(continent,location,everything()) %&gt;%
+  separate(col  = date,
+           into = c("year", "month", "day"),
+           sep  = "-", remove = FALSE) %&gt;%
+  mutate(
+    year  = as.numeric(year),
+    month = as.numeric(month),
+    day   = as.numeric(day)
+  ) %&gt;%
+  unite(order_date_united, year, month, day, sep = "-", remove = FALSE) %&gt;%
+  mutate(order_date_united = as.Date(order_date_united)) %&gt;%
+  na.omit() %&gt;%
+  filter(location %in% selected_countries)</code></pre>
+<p>Calculate the cumulative cases per month for each country</p>
+<pre><code>cumulative_cases &lt;- covid_plot_tbl %&gt;%
+  group_by(location, order_date_united) %&gt;%
+  summarise(cumulative_cases = sum(total_cases))</code></pre>
+<p>Set colors for each country.</p>
+<pre><code>colors &lt;- c("Germany" = "purple", "United Kingdom" = "green", "France" = "orange", "Spain" = "pink", "United States" = "yellow")
+</code></pre>
+<p>Create the line plot. here we use the geom_line and also the light theme in order to recreate the desired picture. Also we need to scale everything to 1 Million and add the label.</p>
+<pre><code>cumulative_cases %&gt;% 
+  ggplot(aes(x = order_date_united, y = cumulative_cases, color = location)) +
+    geom_line(size = 1) +
+    scale_color_manual(values = colors) +
+    theme_light()+
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+    scale_y_continuous(labels = scales::dollar_format(scale = 1/1e6, 
+                                                    prefix = "", 
+                                                    suffix = "M"))+
+  labs(
+    title = "Covid-19 confirmed cases worldwide",
+    subtitle = "As of 25.05.2023",
+    x = "",
+    y = "Cumulative Cases",
+    color = "Continent/Country"
+  )</code></pre>
+<p>The result is shown below. <a href="../../assets/img/visua1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Confirmed Covid Cases worldwide by country"><img src="../../assets/img/visua1.png" class="img-fluid" alt="Confirmed Covid Cases worldwide by country"></a> Apparently, the United States are taking off at some point.</p>
+</section>
+</section>
+<section id="second-question" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Second Question</h1>
+<section id="libraries-1" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="libraries-1"><span class="header-section-number">2.1</span> Libraries</h2>
+<pre><code>library(tidyverse)
+library(dplyr)
+library(maps)</code></pre>
+</section>
+<section id="read-the-codid19-data" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="read-the-codid19-data"><span class="header-section-number">2.2</span> Read the Codid19 Data</h2>
+<p>And the world map data.</p>
+<pre><code>covid_data_tbl &lt;- read_csv("https://covid.ourworldindata.org/data/owid-covid-data.csv")
+world &lt;- map_data("world")</code></pre>
+</section>
+<section id="data-manipulation-1" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="data-manipulation-1"><span class="header-section-number">2.3</span> Data Manipulation</h2>
+<p>Rename the world data</p>
+<pre><code>world &lt;- world %&gt;%
+  rename(x = long, y = lat, id = region)</code></pre>
+<p>Manipulate the covid data. Use default hints. Also select the necessary columns and remove empty rows.</p>
+<pre><code>covid_data_manipulated_tbl &lt;- covid_data_tbl %&gt;% 
+  select(continent,location,total_cases,total_deaths,date) %&gt;% 
+  relocate(continent,location,everything()) %&gt;%
+  mutate(location = case_when(
+    
+    location == "United Kingdom" ~ "UK",
+    location == "United States" ~ "USA",
+    location == "Democratic Republic of Congo" ~ "Democratic Republic of the Congo",
+    TRUE ~ location
+  )) %&gt;%
+  distinct() %&gt;%
+  na.omit()</code></pre>
+<p>Create new tibble for the mortality rate. Therefore we need to divide the total deaths by the total cases and group our results accordingly.</p>
+<pre><code>Mortality_rate_tbl &lt;- covid_data_manipulated_tbl %&gt;%
+  group_by(location) %&gt;%
+  summarise(mortality_rate = sum(total_deaths)/sum(total_cases)) %&gt;%
+  rename(id = location) %&gt;%
+  ungroup()</code></pre>
+<p>Then we merge everything together using the id.</p>
+<pre><code>plot_data &lt;- merge(world, Mortality_rate_tbl, by.x = "id", by.y = "id", all.x = TRUE) %&gt;% unique()</code></pre>
+<p>Now we can plot everything using the geom_map. The colors should also fit the example. Also we need to add the labels.</p>
+<pre><code>plot_data %&gt;% ggplot() +
+  geom_map(map = world,
+           aes(x = x, y = y, map_id = id, fill = mortality_rate),
+           color = "white", size = 0.1) +
+  scale_fill_gradient(low = "#CC3333", high = "#330033", na.value = "grey",
+                      name = "Mortality Rate") +
+  theme_minimal() +
+  labs(
+    title = "Confirmed Covid-19 deaths relative to the size of the population",
+    subtitle = "Around 6.2 Million confirmed Covid-19 deaths worldwide",
+    x = "",
+    y = "",
+    fill = "",
+    caption = "Date 25.05.2023"
+  )
+</code></pre>
+<p>The result is shown below. <a href="../../assets/img/visua2.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Global covid mortality rate"><img src="../../assets/img/visua2.png" class="img-fluid" alt="Global covid mortality rate"></a></p>
 
 
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -425,6 +552,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 });
 </script>
 </div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"loop":true,"selector":".lightbox","closeEffect":"zoom","descPosition":"bottom","openEffect":"zoom"});</script>
 
 
 

@@ -2,11 +2,11 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.2.269">
+<meta name="generator" content="quarto-1.2.335">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Joschka Schwarz">
+<meta name="author" content="Moritz Henkel">
 
 <title>MyLabJournal - Data Wrangling</title>
 <style>
@@ -43,6 +43,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
 <link href="../../site_libs/bootstrap/bootstrap-dark.min.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -131,7 +134,17 @@ ul.task-list li input[type="checkbox"] {
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Contents</h2>
+   
+  <ul class="collapse">
+  <li><a href="#libraries" id="toc-libraries" class="nav-link active" data-scroll-target="#libraries"><span class="toc-section-number">1</span>  Libraries</a></li>
+  <li><a href="#data-import-for-question-1" id="toc-data-import-for-question-1" class="nav-link" data-scroll-target="#data-import-for-question-1"><span class="toc-section-number">2</span>  Data import for Question 1</a></li>
+  <li><a href="#convert-to-data-table" id="toc-convert-to-data-table" class="nav-link" data-scroll-target="#convert-to-data-table"><span class="toc-section-number">3</span>  Convert to data table</a></li>
+  <li><a href="#merge-the-data" id="toc-merge-the-data" class="nav-link" data-scroll-target="#merge-the-data"><span class="toc-section-number">4</span>  Merge the data</a></li>
+  <li><a href="#convert-patent_id-to-numeric" id="toc-convert-patent_id-to-numeric" class="nav-link" data-scroll-target="#convert-patent_id-to-numeric"><span class="toc-section-number">5</span>  Convert patent_id to numeric</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -148,7 +161,7 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Author</div>
     <div class="quarto-title-meta-contents">
-             <p>Joschka Schwarz </p>
+             <p>Moritz Henkel </p>
           </div>
   </div>
     
@@ -159,21 +172,179 @@ ul.task-list li input[type="checkbox"] {
 
 </header>
 
-<div class="callout-note callout callout-style-default callout-captioned">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
+<section id="libraries" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="libraries"><span class="header-section-number">1</span> Libraries</h2>
+<pre><code>library(tidyverse)
+library(vroom)
+library(data.table)
+library(tictoc)</code></pre>
+</section>
+<section id="data-import-for-question-1" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="data-import-for-question-1"><span class="header-section-number">2</span> Data import for Question 1</h2>
+<p>Here we need to look up the word file in order to import our data accordingly. The reduced file was used due to some error with the regular data. Both for assignee and patent assignee</p>
+<pre><code>col_types &lt;- list(
+  id = col_character(),
+  type = col_integer(),
+  organization = col_character()
+)
+assignee_tbl &lt;- vroom(
+  file       = "assignee.tsv", 
+  delim      = "\t", 
+  col_types  = col_types,
+  na         = c("", "NA", "NULL")
+) 
+
+col_types &lt;- list(
+  patent_id = col_character(),
+  assignee_id = col_character()
+)
+patent_assignee_tbl &lt;- vroom(
+  file       = "patent_assignee.tsv", 
+  delim      = "\t", 
+  col_types  = col_types,
+  na         = c("", "NA", "NULL")
+)</code></pre>
+</section>
+<section id="convert-to-data-table" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="convert-to-data-table"><span class="header-section-number">3</span> Convert to data table</h2>
+<p>Here we used setDT in order to create the data table</p>
+<pre><code>setDT(assignee_tbl)
+class(assignee_tbl)
+
+setDT(patent_assignee_tbl)
+class(patent_assignee_tbl)</code></pre>
+<p>Check classes afterwards. ## Data Wrangling ## Rename assignee tbl</p>
+<pre><code>assignee_tbl %&gt;% setnames("id","assignee_id")
+assignee_tbl %&gt;% glimpse</code></pre>
+</section>
+<section id="merge-the-data" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="merge-the-data"><span class="header-section-number">4</span> Merge the data</h2>
+<p>Align data with “by” function and assignee id.</p>
+<pre><code>tic()
+combined_data &lt;- merge(x = assignee_tbl, y = patent_assignee_tbl, 
+                       by    = "assignee_id", 
+                       all.x = TRUE, 
+                       all.y = FALSE)
+toc()
+combined_data %&gt;% glimpse()</code></pre>
+</section>
+<section id="convert-patent_id-to-numeric" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="convert-patent_id-to-numeric"><span class="header-section-number">5</span> Convert patent_id to numeric</h2>
+<pre><code>combined_data[, ("patent_id") := lapply(.SD, as.numeric), .SDcols = "patent_id"]
+str(combined_data)</code></pre>
+<section id="question-1-patent-dominance-what-us-company-corporation-has-the-most-patents-list-the-10-us-companies-with-the-most-assignedgranted-patents." class="level3">
+<h3 class="anchored" data-anchor-id="question-1-patent-dominance-what-us-company-corporation-has-the-most-patents-list-the-10-us-companies-with-the-most-assignedgranted-patents.">Question 1: Patent Dominance: What US company / corporation has the most patents? List the 10 US companies with the most assigned/granted patents.</h3>
+<p>Here we use the .N function in order to get the number of rows and sort everything by the type of organization. Afterwards we clean our data and arrange it in descending order and limit our result to 10</p>
+<pre><code>patent_dominance &lt;- combined_data[, .N, by = organization]
+
+patent_dominance %&gt;%
+  na.omit %&gt;%
+  arrange(desc(N)) %&gt;%
+  head(10)</code></pre>
+<p>The results are shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="../../assets/img/wrangling1.png" class="lightbox" title="10 US companies with the most assigned patents" data-gallery="quarto-lightbox-gallery-1"><img src="../../assets/img/wrangling1.png" class="img-fluid figure-img"></a></p>
+<p></p><figcaption class="figure-caption">10 US companies with the most assigned patents</figcaption><p></p>
+</figure>
 </div>
-<div class="callout-caption-container flex-fill">
-Note
+</section>
+<section id="recent-patent-activity-what-us-company-had-the-most-patents-granted-in-august-2014-list-the-top-10-companies-with-the-most-new-granted-patents-for-august-2014." class="level3">
+<h3 class="anchored" data-anchor-id="recent-patent-activity-what-us-company-had-the-most-patents-granted-in-august-2014-list-the-top-10-companies-with-the-most-new-granted-patents-for-august-2014.">Recent patent activity: What US company had the most patents granted in August 2014? List the top 10 companies with the most new granted patents for August 2014.</h3>
+<p>Import data like before.</p>
+<pre><code>col_types &lt;- list(
+  id = col_character(),
+  date = col_date("%Y-%m-%d"),
+  num_claims = col_double()
+)
+patent_tbl &lt;- vroom(
+  file       = "patent.tsv", 
+  delim      = "\t", 
+  col_types  = col_types,
+  na         = c("", "NA", "NULL")
+)
+
+patent_tbl %&gt;% setnames("id","patent_id")
+patent_tbl %&gt;% glimpse()
+setDT(patent_tbl)
+class(patent_tbl)
+class(combined_data)</code></pre>
+<p>Convert patentid to numeric</p>
+<pre><code>patent_tbl[, ("patent_id") := lapply(.SD, as.numeric), .SDcols = "patent_id"]
+str(combined_data)
+patent_tbl %&gt;% glimpse</code></pre>
+<p>Merge the data and create new columns for year,month and day so we can filter our results by it.</p>
+<pre><code>combined_data_2 &lt;- combined_data[patent_tbl, on = "patent_id"] %&gt;% 
+  separate(
+  col = "date",
+  into = c("year", "month", "day"),
+  sep = "-",
+  remove = TRUE)
+
+combined_data_2 %&gt;% glimpse()
+class(combined_data_2)
+setDT(combined_data_2)</code></pre>
+<p>Calculate the number of new patents for august.</p>
+<pre><code>patent_dominance_august_2 &lt;- combined_data_2[month == "08", .N, by = organization] 
+
+patent_dominance_august_2 %&gt;%
+  na.omit %&gt;% 
+  arrange(desc(N)) %&gt;%
+  head(10)</code></pre>
+<p>The results are shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="../../assets/img/wrangling2.png" class="lightbox" title="10 US companies with the most assigned patents in August" data-gallery="quarto-lightbox-gallery-2"><img src="../../assets/img/wrangling2.png" class="img-fluid figure-img"></a></p>
+<p></p><figcaption class="figure-caption">10 US companies with the most assigned patents in August</figcaption><p></p>
+</figure>
 </div>
+</section>
+<section id="question-3-what-is-the-most-innovative-tech-sector-for-the-top-10-companies-worldwide-with-the-most-patents-what-are-the-top-5-uspto-tech-main-classes" class="level3">
+<h3 class="anchored" data-anchor-id="question-3-what-is-the-most-innovative-tech-sector-for-the-top-10-companies-worldwide-with-the-most-patents-what-are-the-top-5-uspto-tech-main-classes">Question 3: What is the most innovative tech sector? For the top 10 companies (worldwide) with the most patents, what are the top 5 USPTO tech main classes?</h3>
+<p>Import uspc data.</p>
+<pre><code>col_types &lt;- list(
+  patent_id = col_character(),
+  mainclass_id = col_character(),
+  sequence = col_integer()
+)
+
+uspc_tbl &lt;- vroom(
+  file       = "uspc.tsv", 
+  delim      = "\t", 
+  col_types  = col_types,
+  na         = c("", "NA", "NULL"))
+</code></pre>
+<p>Set to data table</p>
+<pre><code>setDT(uspc_tbl)
+class(uspc_tbl)</code></pre>
+<p>Merge the data once again. Mainclassid as numeric so we can filter by it later on.</p>
+<pre><code>combined_data_3 &lt;- combined_data_2[uspc_tbl, on = "patent_id"] 
+combined_data_3[, ("mainclass_id") := lapply(.SD, as.numeric), .SDcols = "mainclass_id"]
+clasS(combined_data_3)
+</code></pre>
+<p>Use the data table in order to filter by organization and mainclass id. Clean the data afterwards and show the results in descending order.</p>
+<pre><code>tic()
+patent_dominance_by_uspc &lt;- combined_data_3[, .N, by = .(organization, mainclass_id)] %&gt;%
+  na.omit %&gt;%
+  unique() %&gt;%
+  arrange(desc(N)) %&gt;%
+  head(10)
+toc()
+
+patent_dominance_by_uspc
+</code></pre>
+<p>The results are shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="../../assets/img/wrangling3.png" class="lightbox" title="Patent dominance by USPC" data-gallery="quarto-lightbox-gallery-3"><img src="../../assets/img/wrangling3.png" class="img-fluid figure-img"></a></p>
+<p></p><figcaption class="figure-caption">Patent dominance by USPC</figcaption><p></p>
+</figure>
 </div>
-<div class="callout-body-container callout-body">
-<p>You can delete everything in here and start fresh.</p>
-</div>
-</div>
+<p>The main mainclass_ids are: 800,257,455,370,438.</p>
 
 
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -425,6 +596,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 });
 </script>
 </div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"selector":".lightbox","loop":true,"descPosition":"bottom","openEffect":"zoom","closeEffect":"zoom"});</script>
 
 
 

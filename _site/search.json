@@ -1,45 +1,143 @@
 [
   {
-    "objectID": "content/03_other/06_links.html",
-    "href": "content/03_other/06_links.html",
-    "title": "Links",
-    "section": "",
-    "text": "R is a free open-source programming language that can be used for statistical analysis, data-simulation, graphing, and lots of other stuff. Another free program is R-studio, that provides a nice graphic interface for R. Download R first, then download R-studio. Both can run on PCs, Macs or Linux. Students will be learning R in the stats labs using the lab manual .\n\n\n\n\nGoogle is great, Google your problem\nStackoverflow is great, google will often take you there because someone has already asked your question, and someone else has answered, usually many people have answered your question many ways."
-  },
-  {
-    "objectID": "content/01_journal/03_data_wrangling.html",
-    "href": "content/01_journal/03_data_wrangling.html",
-    "title": "Data Wrangling",
-    "section": "",
-    "text": "Note\n\n\n\nYou can delete everything in here and start fresh."
-  },
-  {
-    "objectID": "content/01_journal/04_data_visualization.html",
-    "href": "content/01_journal/04_data_visualization.html",
-    "title": "Data Visualization",
-    "section": "",
-    "text": "Note\n\n\n\nYou can delete everything in here and start fresh."
-  },
-  {
     "objectID": "content/01_journal/01_tidyverse.html",
     "href": "content/01_journal/01_tidyverse.html",
     "title": "Tidyverse",
     "section": "",
-    "text": "Note\n\n\n\nYou can delete everything in here and start fresh.\nThis is a .qmd file. It is plain text with special features. Any time you write just like this, it will be compiled to normal text in the website. If you put a # in front of your text, it will create a top level-header.\nTo learn more about Quarto websites visit https://quarto.org/docs/websites."
+    "text": "First of all we need to import the libraries.\nlibrary(tidyverse)\nlibrary(readxl)\n\n\n\nThen we need to import the files.\nbikes_tbl <- read_excel(\"ds_data/01_bike_sales/01_raw_data/bikes.xlsx\")\norderlines_tbl <- read_excel(\"ds_data/01_bike_sales/01_raw_data/orderlines.xlsx\")\nbikeshops_tbl <- read_excel(\"ds_data/01_bike_sales/01_raw_data/bikeshops.xlsx\")\n\n\n\nSubsequently, we check if everything worked well.\nglimpse(bikeshops_tbl)\nglimpse(orderlines_tbl)\nglimpse(bikes_tbl\n\n\n\nThen we need to join the data. Here, we are gonna use the leftjoin and allign the data with the relevant columns of the respective tibbles. Lastly, we are gonna have a quick look into the new data table.\nbike_orderlines_joined_tbl <- orderlines_tbl %>%\n  left_join(bikes_tbl, by = c(\"product.id\" = \"bike.id\")) %>%\n  left_join(bikeshops_tbl, by = c(\"customer.id\" = \"bikeshop.id\"))\nglimpse(bike_orderlines_joined_tbl)\n\n\n\nSeparate the column category into the corresponding categories.Create a new column for the total price and remove all the unnecessary data. Moreover, we need to select the relevant columns.\nbike_orderlines_wrangled_tbl <- bike_orderlines_joined_tbl %>%\n  separate(col    = location,\n           into   = c(\"city\", \"state\"),\n           sep    = \",\") %>%\n\n  mutate(total.price = price * quantity) %>%\n  \n  select(-...1, -gender,-url,-lat,-lng,-name,-frame.material,-weight,-category,-model,-model.year) %>%\n  \n  select(order.id, contains(\"order\"), city, state,\n         price, quantity, total.price,\n         everything()) %>%\n  \n  set_names(names(.) %>% str_replace_all(\"\\\\.\", \"_\"))"
   },
   {
-    "objectID": "content/01_journal/01_tidyverse.html#header-2",
-    "href": "content/01_journal/01_tidyverse.html#header-2",
+    "objectID": "content/01_journal/01_tidyverse.html#step-1---manipulate",
+    "href": "content/01_journal/01_tidyverse.html#step-1---manipulate",
     "title": "Tidyverse",
-    "section": "\n2.1 Header 2",
-    "text": "2.1 Header 2\nHeader 3\nHeader 4\nHeader 5\nHeader 6"
+    "section": "2.1 Step 1 - Manipulate",
+    "text": "2.1 Step 1 - Manipulate\nHere we need to manipulate the data first. Especially grouping by state and summing up the total amount of sales in order to be able to plot it later on.\nsales_by_location_tbl <- bike_orderlines_wrangled_tbl %>%\nselect(total_price, state) %>%\ngroup_by(state) %>%\nsummarise(sales = sum(total_price)) %>%\nungroup() %>%\nmutate(sales_text = scales::dollar(sales, big.mark = \".\", \n                                     decimal.mark = \",\", \n                                     prefix = \"\", \n                                     suffix = \" €\"))\n\nsales_by_location_tbl"
+  },
+  {
+    "objectID": "content/01_journal/01_tidyverse.html#step-2---visualize",
+    "href": "content/01_journal/01_tidyverse.html#step-2---visualize",
+    "title": "Tidyverse",
+    "section": "2.2 Step 2 - Visualize",
+    "text": "2.2 Step 2 - Visualize\nIn this last step, we are able to plot our sales-results. We pipe our sales data into the ggplot funtcion and use the geom_col function in order to get the desired bars. By adding labels, we are able to highlight our results even more.\nsales_by_location_tbl %>%\n  \nggplot(aes(x = state, y = sales)) +\ngeom_col(fill = \"#2DC6D6\") +\ngeom_label(aes(label = sales_text)) +\nscale_y_continuous(labels = scales::dollar_format(big.mark = \".\", \n                                                    decimal.mark = \",\", \n                                                    prefix = \"\", \n                                                    suffix = \" €\")) +\ntheme(axis.text.x = element_text(angle = 45, hjust = 1)) +\nlabs(\n    title    = \"Revenue by Location\",\n    subtitle = \"Highest Revenue in NRW\",\n    x = \"\", # Override defaults for x and y\n    y = \"Revenue\"\n  )\nThe results are shown in the figure below. The highest revenue is in NRW. \n\nSales by Location and year (facet_wrap)"
+  },
+  {
+    "objectID": "content/01_journal/01_tidyverse.html#step-1---manipulate-1",
+    "href": "content/01_journal/01_tidyverse.html#step-1---manipulate-1",
+    "title": "Tidyverse",
+    "section": "2.3 Step 1 - Manipulate",
+    "text": "2.3 Step 1 - Manipulate\nIn order to get the sales corresponding to the location and year, we need to group our data by year and state. And also do the regular editing of the code.\nsales_by_year_by_location_tbl <- bike_orderlines_wrangled_tbl %>%\nselect(order_date, total_price, state) %>%\nmutate(year = year(order_date)) %>%\n  \ngroup_by(year, state) %>%\nsummarise(sales=sum(total_price)) %>%\nungroup() %>%\n\nmutate(sales_text = scales::dollar(sales, big.mark = \".\", \n                                     decimal.mark = \",\", \n                                     prefix = \"\", \n                                     suffix = \" €\"))\n\nsales_by_year_by_location_tbl"
+  },
+  {
+    "objectID": "content/01_journal/01_tidyverse.html#step-2---visualize-1",
+    "href": "content/01_journal/01_tidyverse.html#step-2---visualize-1",
+    "title": "Tidyverse",
+    "section": "2.4 Step 2 - Visualize",
+    "text": "2.4 Step 2 - Visualize\nNow once again we can visualize our data. In order to tease the sales for each state, we need to use the face wrap function in this case.\nsales_by_year_by_location_tbl %>%\n\nggplot(aes(x =year, y = sales, fill = state)) +\n  \ngeom_col() +\ngeom_smooth(method = \"lm\", se = FALSE) +\n  \nfacet_wrap(~ state) +\n\n  scale_y_continuous(labels = scales::dollar_format(big.mark = \".\", \n                                                    decimal.mark = \",\", \n                                                    prefix = \"\", \n                                                    suffix = \" €\")) +\n  labs(\n    title = \"Revenue by state and year\",\n    subtitle = \"NRW has the steepest trend curve, but Hamburg has the most continuous growth\",\n    fill = \"Main category\" # Changes the legend name\n  ) \nThe result is shown below."
   },
   {
     "objectID": "content/01_journal/02_data_acquisition.html",
     "href": "content/01_journal/02_data_acquisition.html",
     "title": "Data Acquisition",
     "section": "",
-    "text": "Note\n\n\n\nYou can delete everything in here and start fresh."
+    "text": "library(httr)\nlibrary(jsonlite)\nlibrary(tidyverse)\nlibrary(lubridate)\nlibrary(ggplot2)\n\n\n\nIn this case I decided to go for some Macroeconimic Data. Consumer Price Index and the Producer Price Index. The URLs were build with the help of a base URL and then glued.\nbase_url <- \"https://www.econdb.com/api/series/\"\ncpi_url <- \"CPIUS\"\nppi_url <- \"PPIUS\"\n\nfull_url_cpi <- base::paste0(base_url,cpi_url)\nfull_url_ppi <- base::paste0(base_url,ppi_url)\n\n\n\nUsing and specifying the httr library we call our APIs\napi_call_cpi <- httr::GET(full_url_cpi)\napi_call_ppi <- httr::GET(full_url_ppi)\n\n\n\nIn the Next step we need to create our dataframes. Here we Use the rawtochar first and then the JSON package and lastly the mapdfr function. Finally we erade unnecessary columns and clean our data.\napi_cpi_char <- base::rawToChar(api_call_cpi$content)\napi_ppi_char <- base::rawToChar(api_call_ppi$content)\n\napi_cpi_JSON <- jsonlite::fromJSON(api_cpi_char, flatten = TRUE)\napi_ppi_JSON <- jsonlite::fromJSON(api_ppi_char, flatten = TRUE)\n\napi_cpi_tbl <- api_cpi_JSON %>%\n  map_dfr( ~ .x %>% as_tibble()) %>%\n  select(.,-c(value,status,\"1:area_code\",\"3:item_code\",\"1220:base_code\",\"GEO:None\"))\napi_ppi_tbl <- api_ppi_JSON %>%\n  map_dfr( ~ .x %>% as_tibble())\n\n\napi_cpi_cleaned_tbl <- api_cpi_tbl[-(1:6),] %>% mutate(Date= as.Date(dates))\napi_ppi_cleaned_tbl <- api_ppi_tbl[-(1:6),] %>% mutate(Date= as.Date(dates))\n\n\n\nIn the Last step we can plot our data. Since we want a continous line showing the rise in the respective index, we use the geom_line. CPI First:\n  ggplot(api_cpi_cleaned_tbl, aes(x = Date, y = values, color = \"darkred\",lty = 'Consumer Price Index')) + \n   geom_line() + \n  scale_x_date(date_labels = \"%Y-%m\")\nWith the corresping result:  And then also PPI:\n ggplot(api_ppi_cleaned_tbl, aes(x = Date, y = values, color=\"steelblue\",lty = 'Produer Price Index')) + \n    geom_line() + \n    scale_x_date(date_labels = \"%Y-%m\")\n\n\n\nCaption"
+  },
+  {
+    "objectID": "content/01_journal/02_data_acquisition.html#collect-product-families-of-rose",
+    "href": "content/01_journal/02_data_acquisition.html#collect-product-families-of-rose",
+    "title": "Data Acquisition",
+    "section": "2.1 Collect Product Families of ROSE",
+    "text": "2.1 Collect Product Families of ROSE\nAdd the url.\nurl_home <- \"https://www.rosebikes.de/fahrräder\"\nRead in the HTML for the entire homepage\nhtml_home <- read_html(url_home)\nWebscrape the product families from ROSE bikes.\nbike_family_tbl <- html_home %>%\nparent node\nhtml_nodes(\".columns\") %>%\nGet the nodes for the families\nhtml_nodes(css = \".catalog-navigation__list-item > a\") %>%\nAnd extract the information of the title attribute\nhtml_attr('title') %>%\nRemove the product families Sale, bikefinder und schnell verfügbare Bikes\ndiscard(.p = ~stringr::str_detect(.x,\"Sale|Bike Finder|Schnell verfügbare Bikes\"))%>%\nConvert vector to tibble\nenframe(name = \"position\", value =\"family_class\") %>%\n  \n  mutate(\n    family_id = str_glue(\"#{family_class}\")\n  )\n\nbike_family_tbl"
+  },
+  {
+    "objectID": "content/01_journal/02_data_acquisition.html#create-product-family-urls-of-rose",
+    "href": "content/01_journal/02_data_acquisition.html#create-product-family-urls-of-rose",
+    "title": "Data Acquisition",
+    "section": "2.2 Create product family URLs of Rose",
+    "text": "2.2 Create product family URLs of Rose\nCreate bike family url tbl to point at the right nodes\nbike_family_url_tbl <- html_home %>%\nParent node\nhtml_nodes(\".columns\") %>%\nGet the nodes for the families once again\nhtml_nodes(css = \".catalog-navigation__list-item > a\") %>%\nAnd extract the information of the href attribute for bike urls\nhtml_attr('href') %>%\nRemove the product families sale, bikefinder und bikes mit kurzer lieferzeit-rennrad\ndiscard(.p = ~stringr::str_detect(.x,\"/fahrräder/sale|/bike-finder|/bikes-mit-kurzer-lieferzeit-rennrad\"))%>%\nConvert vector to tibble\nenframe(name = \"position\", value =\"subdirectory\") %>%\n  \n  mutate(\n    url = glue(\"https://www.rosebikes.de{subdirectory}\")\n  ) %>%\n  \nSome categories are listed multiple times. We only need unique values\n  distinct(url)\n\nbike_family_url_tbl"
+  },
+  {
+    "objectID": "content/01_journal/02_data_acquisition.html#collect-product-categories-of-rose",
+    "href": "content/01_journal/02_data_acquisition.html#collect-product-categories-of-rose",
+    "title": "Data Acquisition",
+    "section": "2.3 Collect Product categories of ROSE",
+    "text": "2.3 Collect Product categories of ROSE\nHTML Tags are deeply neste + JAVA, thus individual bike category data gathering Also many product Families had no further product categories.\nCreate URLs for the product categories.\nurl_mtb <- \"https://www.rosebikes.de//fahrräder/mtb\"\nurl_rennrad <- \"https://www.rosebikes.de/fahrräder/rennrad\"\nurl_ebike <- \"https://www.rosebikes.de/fahrräder/e-bike\"\nFinally be able to sort of avoid the deeply nested HTML tags and thus gather the data. Create tibbles for that.\nbike_category_mtb_tbl <-  read_html(url_mtb) %>%\n  html_nodes(css = \".catalog-navigation__list-item > a\") %>%\n  html_attr('href') %>%\n  discard(.p = ~stringr::str_detect(.x,\"/fahrräder/mtb$\"))%>%\n  enframe(name = \"position\", value =\"subdirectory\") %>% \n  mutate(url = glue(\"https://www.rosebikes.de{subdirectory}\")) %>%\n  distinct(url)\n\nbike_category_rennrad_tbl <-  read_html(url_rennrad) %>%\n  html_nodes(css = \".catalog-navigation__list-item > a\") %>%\n  html_attr('href') %>%\n  discard(.p = ~stringr::str_detect(.x,\"/fahrräder/rennrad$\"))%>%\n  enframe(name = \"position\", value =\"subdirectory\") %>% \n  mutate(url = glue(\"https://www.rosebikes.de{subdirectory}\")) %>%\n  distinct(url)\n\nbike_category_ebike_tbl <-  read_html(url_ebike) %>%\n  html_nodes(css = \".catalog-navigation__list-item > a\") %>%\n  html_attr('href') %>%\n  discard(.p = ~stringr::str_detect(.x,\"/fahrräder/e-bike$\"))%>%\n  enframe(name = \"position\", value =\"subdirectory\") %>% \n  mutate(url = glue(\"https://www.rosebikes.de{subdirectory}\")) %>%\n  distinct(url)\nIn theory you would need another “rest” tibble from all the product families not having product categories, but since this might interfere with the rest of my code due to the different nature of the path, I will not include the rest in the bike category tibble\nbike_category_rest_tbl <- bike_family_url_tbl %>%\n  filter(!row_number() %in% c(1, 2, 4))\n\nbike_category_tbl <- rbind(bike_category_mtb_tbl,bike_category_rennrad_tbl,bike_category_ebike_tbl)"
+  },
+  {
+    "objectID": "content/01_journal/02_data_acquisition.html#collect-bike-data-for-a-single-bike",
+    "href": "content/01_journal/02_data_acquisition.html#collect-bike-data-for-a-single-bike",
+    "title": "Data Acquisition",
+    "section": "2.4 Collect Bike Data for a single bike",
+    "text": "2.4 Collect Bike Data for a single bike\nSelect first bike for the first category mtb url\nbike_category_url <- bike_category_tbl$url[1]\nGet the URLs for the first bike of the first category\nhtml_bike_category  <- read_html(bike_category_url)\nbike_url_tbl        <- html_bike_category %>%\n  html_nodes(css = \".align-middle > a\") %>%\n  html_attr('href') %>%\n  enframe(name = \"position\", value = \"url\")\nGet the description for the first bike of the first category\nbike_desc_tbl <- html_bike_category %>%\n  \n    html_nodes(\".catalog-category-bikes__list-item\") %>%\n    html_nodes(\".catalog-category-bikes__content-subtitle\") %>%\n    html_text() %>%\n    enframe(name = \"position\", value = \"description\")\nStack all lists together\nbike_price_tbl <- html_bike_category %>%\n  html_nodes (css =\".catalog-category-bikes__price-title\") %>%\n  html_text() %>%\n  enframe(name = \"position\", value = \"price\")\n\nbike_name_tbl <- html_bike_category %>%\n  html_nodes (css = \".basic-headline__title\") %>%\n  html_text() %>%\n  discard(.p = ~stringr::str_detect(.x,\"Cross Country|Beratung\"))%>%\n  enframe(name =\"position\", value =\"name\")\n\nsingle_bike_data_tbl <-  bike_name_tbl %>%\n  left_join(bike_price_tbl) %>%\n  left_join(bike_desc_tbl) %>%\n  left_join(bike_url_tbl)"
+  },
+  {
+    "objectID": "content/01_journal/02_data_acquisition.html#wrap-it-into-a-function",
+    "href": "content/01_journal/02_data_acquisition.html#wrap-it-into-a-function",
+    "title": "Data Acquisition",
+    "section": "2.5 Wrap it into a function",
+    "text": "2.5 Wrap it into a function\nPut every single piece into a function\nget_bike_data <- function(url) {\n  html_bike_category <- read_html(url)\n  \n  #Get the URLs\n  html_bike_category  <- read_html(bike_category_url)\n  bike_url_tbl        <- html_bike_category %>%\n    html_nodes(css = \".align-middle > a\") %>%\n    html_attr('href') %>%\n    enframe(name = \"position\", value = \"url\")\n  \n  #Get the descrition\n  bike_desc_tbl <- html_bike_category %>%\n    \n    html_nodes(\".catalog-category-bikes__list-item\") %>%\n    html_nodes(\".catalog-category-bikes__content-subtitle\") %>%\n    html_text() %>%\n    enframe(name = \"position\", value = \"description\")\n  \n  #Get the price\n  bike_price_tbl <- html_bike_category %>%\n    html_nodes (css =\".catalog-category-bikes__price-title\") %>%\n    html_text() %>%\n    enframe(name = \"position\", value = \"price\")\n  \n  #Get the name\n  bike_name_tbl <- html_bike_category %>%\n    html_nodes (css = \".basic-headline__title\") %>%\n    html_text() %>%\n    discard(.p = ~stringr::str_detect(.x,\"Cross Country|Beratung\"))%>%\n    enframe(name =\"position\", value =\"name\")\n  \n  #Stick everything together\n  single_bike_data_tbl <-  bike_name_tbl %>%\n    left_join(bike_price_tbl) %>%\n    left_join(bike_desc_tbl) %>%\n    left_join(bike_url_tbl)\n}\nRun for all bike category urls, so we get the data for every bike\nbike_data_tbl <- tibble()\n\n# Loop through all urls\nfor (i in seq_along(bike_category_tbl$url)) {\n  \n  bike_category_url <- bike_category_tbl$url[i]\n  bike_data_tbl     <- bind_rows(bike_data_tbl, get_bike_data(bike_category_url))\n  \n  # Wait between each request to reduce the load on the server \n  # Otherwise we could get blocked\n  Sys.sleep(5)\n  \n  # print the progress\n  print(i)\n  \n}\nClean the data so we can have a look into the tibble.\nbike_data_cleaned_tbl <- bike_data_tbl %>%\n  na.omit() %>%\n  select(.,-position)\nThe result is shown below."
+  },
+  {
+    "objectID": "content/01_journal/03_data_wrangling.html",
+    "href": "content/01_journal/03_data_wrangling.html",
+    "title": "Data Wrangling",
+    "section": "",
+    "text": "library(tidyverse)\nlibrary(vroom)\nlibrary(data.table)\nlibrary(tictoc)"
+  },
+  {
+    "objectID": "content/01_journal/03_data_wrangling.html#data-import-for-question-1",
+    "href": "content/01_journal/03_data_wrangling.html#data-import-for-question-1",
+    "title": "Data Wrangling",
+    "section": "2 Data import for Question 1",
+    "text": "2 Data import for Question 1\nHere we need to look up the word file in order to import our data accordingly. The reduced file was used due to some error with the regular data. Both for assignee and patent assignee\ncol_types <- list(\n  id = col_character(),\n  type = col_integer(),\n  organization = col_character()\n)\nassignee_tbl <- vroom(\n  file       = \"assignee.tsv\", \n  delim      = \"\\t\", \n  col_types  = col_types,\n  na         = c(\"\", \"NA\", \"NULL\")\n) \n\ncol_types <- list(\n  patent_id = col_character(),\n  assignee_id = col_character()\n)\npatent_assignee_tbl <- vroom(\n  file       = \"patent_assignee.tsv\", \n  delim      = \"\\t\", \n  col_types  = col_types,\n  na         = c(\"\", \"NA\", \"NULL\")\n)"
+  },
+  {
+    "objectID": "content/01_journal/03_data_wrangling.html#convert-to-data-table",
+    "href": "content/01_journal/03_data_wrangling.html#convert-to-data-table",
+    "title": "Data Wrangling",
+    "section": "3 Convert to data table",
+    "text": "3 Convert to data table\nHere we used setDT in order to create the data table\nsetDT(assignee_tbl)\nclass(assignee_tbl)\n\nsetDT(patent_assignee_tbl)\nclass(patent_assignee_tbl)\nCheck classes afterwards. ## Data Wrangling ## Rename assignee tbl\nassignee_tbl %>% setnames(\"id\",\"assignee_id\")\nassignee_tbl %>% glimpse"
+  },
+  {
+    "objectID": "content/01_journal/03_data_wrangling.html#merge-the-data",
+    "href": "content/01_journal/03_data_wrangling.html#merge-the-data",
+    "title": "Data Wrangling",
+    "section": "4 Merge the data",
+    "text": "4 Merge the data\nAlign data with “by” function and assignee id.\ntic()\ncombined_data <- merge(x = assignee_tbl, y = patent_assignee_tbl, \n                       by    = \"assignee_id\", \n                       all.x = TRUE, \n                       all.y = FALSE)\ntoc()\ncombined_data %>% glimpse()"
+  },
+  {
+    "objectID": "content/01_journal/03_data_wrangling.html#convert-patent_id-to-numeric",
+    "href": "content/01_journal/03_data_wrangling.html#convert-patent_id-to-numeric",
+    "title": "Data Wrangling",
+    "section": "5 Convert patent_id to numeric",
+    "text": "5 Convert patent_id to numeric\ncombined_data[, (\"patent_id\") := lapply(.SD, as.numeric), .SDcols = \"patent_id\"]\nstr(combined_data)\n\nQuestion 1: Patent Dominance: What US company / corporation has the most patents? List the 10 US companies with the most assigned/granted patents.\nHere we use the .N function in order to get the number of rows and sort everything by the type of organization. Afterwards we clean our data and arrange it in descending order and limit our result to 10\npatent_dominance <- combined_data[, .N, by = organization]\n\npatent_dominance %>%\n  na.omit %>%\n  arrange(desc(N)) %>%\n  head(10)\nThe results are shown below.\n\n\n\n10 US companies with the most assigned patents\n\n\n\n\nRecent patent activity: What US company had the most patents granted in August 2014? List the top 10 companies with the most new granted patents for August 2014.\nImport data like before.\ncol_types <- list(\n  id = col_character(),\n  date = col_date(\"%Y-%m-%d\"),\n  num_claims = col_double()\n)\npatent_tbl <- vroom(\n  file       = \"patent.tsv\", \n  delim      = \"\\t\", \n  col_types  = col_types,\n  na         = c(\"\", \"NA\", \"NULL\")\n)\n\npatent_tbl %>% setnames(\"id\",\"patent_id\")\npatent_tbl %>% glimpse()\nsetDT(patent_tbl)\nclass(patent_tbl)\nclass(combined_data)\nConvert patentid to numeric\npatent_tbl[, (\"patent_id\") := lapply(.SD, as.numeric), .SDcols = \"patent_id\"]\nstr(combined_data)\npatent_tbl %>% glimpse\nMerge the data and create new columns for year,month and day so we can filter our results by it.\ncombined_data_2 <- combined_data[patent_tbl, on = \"patent_id\"] %>% \n  separate(\n  col = \"date\",\n  into = c(\"year\", \"month\", \"day\"),\n  sep = \"-\",\n  remove = TRUE)\n\ncombined_data_2 %>% glimpse()\nclass(combined_data_2)\nsetDT(combined_data_2)\nCalculate the number of new patents for august.\npatent_dominance_august_2 <- combined_data_2[month == \"08\", .N, by = organization] \n\npatent_dominance_august_2 %>%\n  na.omit %>% \n  arrange(desc(N)) %>%\n  head(10)\nThe results are shown below.\n\n\n\n10 US companies with the most assigned patents in August\n\n\n\n\nQuestion 3: What is the most innovative tech sector? For the top 10 companies (worldwide) with the most patents, what are the top 5 USPTO tech main classes?\nImport uspc data.\ncol_types <- list(\n  patent_id = col_character(),\n  mainclass_id = col_character(),\n  sequence = col_integer()\n)\n\nuspc_tbl <- vroom(\n  file       = \"uspc.tsv\", \n  delim      = \"\\t\", \n  col_types  = col_types,\n  na         = c(\"\", \"NA\", \"NULL\"))\n\nSet to data table\nsetDT(uspc_tbl)\nclass(uspc_tbl)\nMerge the data once again. Mainclassid as numeric so we can filter by it later on.\ncombined_data_3 <- combined_data_2[uspc_tbl, on = \"patent_id\"] \ncombined_data_3[, (\"mainclass_id\") := lapply(.SD, as.numeric), .SDcols = \"mainclass_id\"]\nclasS(combined_data_3)\n\nUse the data table in order to filter by organization and mainclass id. Clean the data afterwards and show the results in descending order.\ntic()\npatent_dominance_by_uspc <- combined_data_3[, .N, by = .(organization, mainclass_id)] %>%\n  na.omit %>%\n  unique() %>%\n  arrange(desc(N)) %>%\n  head(10)\ntoc()\n\npatent_dominance_by_uspc\n\nThe results are shown below.\n\n\n\nPatent dominance by USPC\n\n\nThe main mainclass_ids are: 800,257,455,370,438."
+  },
+  {
+    "objectID": "content/01_journal/04_data_visualization.html",
+    "href": "content/01_journal/04_data_visualization.html",
+    "title": "Data Visualization",
+    "section": "",
+    "text": "library(tidyverse)\nlibrary(vroom)\nlibrary(data.table)\nlibrary(tictoc)\n\n\n\ncovid_data_tbl <- read_csv(\"https://covid.ourworldindata.org/data/owid-covid-data.csv\")\n\n\n\nSelect desired countries for the plot.\nselected_countries <- c(\"Germany\", \"United Kingdom\", \"France\", \"Spain\", \"United States\")\nCreate Plot tibble. Select necessary columns. Separate the date column and also create numeriv values for it, so it can be plotted. Also remove empty rows and unite the date again.\ncovid_plot_tbl <- covid_data_tbl %>% \n  select(continent,total_cases,date,location) %>% \n  relocate(continent,location,everything()) %>%\n  separate(col  = date,\n           into = c(\"year\", \"month\", \"day\"),\n           sep  = \"-\", remove = FALSE) %>%\n  mutate(\n    year  = as.numeric(year),\n    month = as.numeric(month),\n    day   = as.numeric(day)\n  ) %>%\n  unite(order_date_united, year, month, day, sep = \"-\", remove = FALSE) %>%\n  mutate(order_date_united = as.Date(order_date_united)) %>%\n  na.omit() %>%\n  filter(location %in% selected_countries)\nCalculate the cumulative cases per month for each country\ncumulative_cases <- covid_plot_tbl %>%\n  group_by(location, order_date_united) %>%\n  summarise(cumulative_cases = sum(total_cases))\nSet colors for each country.\ncolors <- c(\"Germany\" = \"purple\", \"United Kingdom\" = \"green\", \"France\" = \"orange\", \"Spain\" = \"pink\", \"United States\" = \"yellow\")\n\nCreate the line plot. here we use the geom_line and also the light theme in order to recreate the desired picture. Also we need to scale everything to 1 Million and add the label.\ncumulative_cases %>% \n  ggplot(aes(x = order_date_united, y = cumulative_cases, color = location)) +\n    geom_line(size = 1) +\n    scale_color_manual(values = colors) +\n    theme_light()+\n    theme(axis.text.x = element_text(angle = 45, hjust = 1))+\n    scale_y_continuous(labels = scales::dollar_format(scale = 1/1e6, \n                                                    prefix = \"\", \n                                                    suffix = \"M\"))+\n  labs(\n    title = \"Covid-19 confirmed cases worldwide\",\n    subtitle = \"As of 25.05.2023\",\n    x = \"\",\n    y = \"Cumulative Cases\",\n    color = \"Continent/Country\"\n  )\nThe result is shown below.  Apparently, the United States are taking off at some point."
+  },
+  {
+    "objectID": "content/01_journal/04_data_visualization.html#libraries-1",
+    "href": "content/01_journal/04_data_visualization.html#libraries-1",
+    "title": "Data Visualization",
+    "section": "2.1 Libraries",
+    "text": "2.1 Libraries\nlibrary(tidyverse)\nlibrary(dplyr)\nlibrary(maps)"
+  },
+  {
+    "objectID": "content/01_journal/04_data_visualization.html#read-the-codid19-data",
+    "href": "content/01_journal/04_data_visualization.html#read-the-codid19-data",
+    "title": "Data Visualization",
+    "section": "2.2 Read the Codid19 Data",
+    "text": "2.2 Read the Codid19 Data\nAnd the world map data.\ncovid_data_tbl <- read_csv(\"https://covid.ourworldindata.org/data/owid-covid-data.csv\")\nworld <- map_data(\"world\")"
+  },
+  {
+    "objectID": "content/01_journal/04_data_visualization.html#data-manipulation-1",
+    "href": "content/01_journal/04_data_visualization.html#data-manipulation-1",
+    "title": "Data Visualization",
+    "section": "2.3 Data Manipulation",
+    "text": "2.3 Data Manipulation\nRename the world data\nworld <- world %>%\n  rename(x = long, y = lat, id = region)\nManipulate the covid data. Use default hints. Also select the necessary columns and remove empty rows.\ncovid_data_manipulated_tbl <- covid_data_tbl %>% \n  select(continent,location,total_cases,total_deaths,date) %>% \n  relocate(continent,location,everything()) %>%\n  mutate(location = case_when(\n    \n    location == \"United Kingdom\" ~ \"UK\",\n    location == \"United States\" ~ \"USA\",\n    location == \"Democratic Republic of Congo\" ~ \"Democratic Republic of the Congo\",\n    TRUE ~ location\n  )) %>%\n  distinct() %>%\n  na.omit()\nCreate new tibble for the mortality rate. Therefore we need to divide the total deaths by the total cases and group our results accordingly.\nMortality_rate_tbl <- covid_data_manipulated_tbl %>%\n  group_by(location) %>%\n  summarise(mortality_rate = sum(total_deaths)/sum(total_cases)) %>%\n  rename(id = location) %>%\n  ungroup()\nThen we merge everything together using the id.\nplot_data <- merge(world, Mortality_rate_tbl, by.x = \"id\", by.y = \"id\", all.x = TRUE) %>% unique()\nNow we can plot everything using the geom_map. The colors should also fit the example. Also we need to add the labels.\nplot_data %>% ggplot() +\n  geom_map(map = world,\n           aes(x = x, y = y, map_id = id, fill = mortality_rate),\n           color = \"white\", size = 0.1) +\n  scale_fill_gradient(low = \"#CC3333\", high = \"#330033\", na.value = \"grey\",\n                      name = \"Mortality Rate\") +\n  theme_minimal() +\n  labs(\n    title = \"Confirmed Covid-19 deaths relative to the size of the population\",\n    subtitle = \"Around 6.2 Million confirmed Covid-19 deaths worldwide\",\n    x = \"\",\n    y = \"\",\n    fill = \"\",\n    caption = \"Date 25.05.2023\"\n  )\n\nThe result is shown below."
   },
   {
     "objectID": "content/02_notes/05_class_notes.html",
@@ -47,6 +145,13 @@
     "title": "Class Notes",
     "section": "",
     "text": "IMPORTANT: You can delete everything in here and start fresh. You might want to start by not deleting anything above this line until you know what that stuff is doing.\nThis is an .qmd file. It is plain text with special features. Any time you write just like this, it will be compiled to normal text in the website. If you put a # in front of your text, it will create a top level-header."
+  },
+  {
+    "objectID": "content/03_other/06_links.html",
+    "href": "content/03_other/06_links.html",
+    "title": "Links",
+    "section": "",
+    "text": "R is a free open-source programming language that can be used for statistical analysis, data-simulation, graphing, and lots of other stuff. Another free program is R-studio, that provides a nice graphic interface for R. Download R first, then download R-studio. Both can run on PCs, Macs or Linux. Students will be learning R in the stats labs using the lab manual .\n\n\n\n\nGoogle is great, Google your problem\nStackoverflow is great, google will often take you there because someone has already asked your question, and someone else has answered, usually many people have answered your question many ways."
   },
   {
     "objectID": "index.html",
@@ -60,6 +165,6 @@
     "href": "index.html#how-to-use",
     "title": "My Lab Journal",
     "section": "How to use",
-    "text": "How to use\n\nAccept the assignment and get your own github repo.\nBlog/journal what you are doing in R, by editing the .qmd files.\nSee the links page for lots of helpful links on learning R.\nChange everything to make it your own.\nMake sure to render you website everytime before you want to upload changes"
+    "text": "How to use\n\nAccept the assignment and get your own github repo.\nBlog/journal what you are doing in R, by editing the .qmd files.\nSee the links page for lots of helpful links on learning R.\nChange everything to make it your own.\nMake sure to render you website everytime before you want to upload changes\nRichtige Reihenfolge: Save changes, render website, commit, push + test+finally"
   }
 ]
